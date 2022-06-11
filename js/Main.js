@@ -61,15 +61,13 @@ class Main {
           };
         break;
       };
-
-      this.debugger(buttonType);
     });
   };
 
   addPlayer() {
     const textarea = Tool.selector('textarea').value;
     const value = textarea.replace(/(\n|\s\s+)/g, ' ').trim();
-    const names = value.split(' ').map((name) => ({ name, points: 0 }));
+    const names = value.split(' ').map((name) => ({ name, score: 0 }));
 
     if (this.canAddPlayers(names.length)) {
       this.state.rounds = Bracket.createRounds(names);
@@ -88,24 +86,25 @@ class Main {
   };
 
   increaseScore(target) {
-    const [roundId, playersId, id] = target.dataset.buttonId.split('-');
+    const [roundId, challengeId, playerId] = target.dataset.buttonId.split('-');
+    const player = this.state.rounds[roundId][challengeId][playerId];
 
-    this.state.rounds[roundId][playersId][id].points += 1;
-    target.innerText = this.state.rounds[roundId][playersId][id].points;
+    player.score += 1;
+    target.innerText = player.score;
   };
 
 
   updateChallenge({ id, name }) {
-    const nextChallengeId = id.split('-');
     const className = Interface.CLASS_NAME;
-    const [roundId, challengeId] = nextChallengeId;
-    const idx = Bracket.nextChallengeId(this.state.rounds, nextChallengeId);
+    const [roundId, challengeId] = id.split('-');
+    const challenge = this.state.rounds[roundId][challengeId];
+    const playerId = Bracket.getNextChallengeId(challenge);
 
-    this.state.rounds[roundId][challengeId][idx] = { name, points: 0 };
+    challenge[playerId] = { name, score: 0 };
 
-    Tool.selectorAll('rounds')[roundId]
+    Tool.selectorAll('round')[roundId]
       .querySelectorAll(`.${className}__challenge`)[challengeId]
-      .querySelectorAll(`.${className}__name`)[idx]
+      .querySelectorAll(`.${className}__name`)[playerId]
       .innerText = name;
   };
 };

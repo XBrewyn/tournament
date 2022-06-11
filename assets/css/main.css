@@ -112,7 +112,7 @@ body {
   top: 40px;
  }
 
-.tournament__rounds {
+.tournament__round {
   align-items: center;
   display: flex;
   flex-wrap: wrap;

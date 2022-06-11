@@ -36,18 +36,18 @@ class Interface {
     Tool.createTemplate({
       target: `.${CLASS_NAME}__bracket`,
       template: `
-        ${Tool.map(rounds, ((challenges, roundIndex) => {
+        ${rounds.template((challenges, roundIndex) => {
           const height = getConectorHeight(roundIndex);
 
           return `
-            <div class="${CLASS_NAME}__rounds"> 
-              ${Tool.map(challenges, ((players, challengeIndex) => `
+            <div class="${CLASS_NAME}__round"> 
+              ${challenges.template((players, challengeIndex) => `
                 <div class="${CLASS_NAME}__challenge">
                   ${Interface.#getTitleTemplate(challengeIndex, roundIndex + 1)}
                   ${Interface.#getConectorTemplate(roundIndex, challengeIndex, height)}
                   ${getChallengeIdTemplate()}
 
-                  ${Tool.map(players, (({ name, points }, playerIndex) => `
+                  ${players.template(({ name, score }, playerIndex) => `
                     <div class="${CLASS_NAME}__player">
                       <span
                         class="${CLASS_NAME}__name"
@@ -59,14 +59,14 @@ class Interface {
                       <button
                         class="${CLASS_NAME}__increase-score"
                         data-button-id="${roundIndex}-${challengeIndex}-${playerIndex}"
-                      >${points}</button>
+                      >${score}</button>
                     </div>
-                  `))}
+                  `)}
                 </div>
-              `))}
+              `)}
             </div>
           `
-        }))}
+        })}
       `
     });
   };
@@ -74,10 +74,10 @@ class Interface {
   static #getChallengeIdTemplate() {
     let challengeId = 0;
     const { CLASS_NAME } = Interface;
-    const spaceCLASS_NAME = (challengeId > 9) ? 'space' : '';
+    const classNameSpace = (challengeId > 9) ? 'space' : '';
 
     return () => (`
-      <span class="${CLASS_NAME}__number ${spaceCLASS_NAME}">
+      <span class="${CLASS_NAME}__number ${classNameSpace}">
         ${++challengeId}
       </span>
     `);

@@ -20,7 +20,7 @@ class Tool {
   };
 
   static createTemplate({ template, target = '#app' }) {
-    document.querySelector(target).innerHTML = template;
+    document.querySelector(target).innerHTML += template;
   };
 
   static selector(className) {
@@ -31,15 +31,39 @@ class Tool {
     return document.querySelectorAll(`.${Interface.CLASS_NAME}__${className}`);
   }
 
-  static map(elements, callback) {
-    return elements.map((element, index) => callback(element, index)).join('');
-  };
+  static test() {
+    const tests = [];
 
-  static sortRandom(elements) {
-    return elements.sort(() => .5 - Math.random());
-  };
+    return (message = '') => {
+      return {
+        notify: () => console.table(tests),
+        expected: (expect) => {
+          const passed = { Message: message, passed: '✓'};
+          const notPassed = { Message: message, passed: 'x'};
 
-  static capitalize(str) {
-    return str.replace(/./,(str)=> str.toUpperCase());
+          return {
+            equal(value) {
+              tests.push((expect === value) ? passed : notPassed)
+            },
+
+            equalObject(value) {
+              tests.push((JSON.stringify(expect) === JSON.stringify(value)) ? passed : notPassed)
+            }
+          }
+        }
+      }
+    }
   }
-}
+};
+
+Array.prototype.sortRandom = function () {
+  return this.sort(() => .5 - Math.random());
+};
+
+Array.prototype.template = function(callback) {
+  return this.map((element, index) => callback(element, index)).join('');
+};
+
+String.prototype.capitalize = function () {
+  return this.replace(/./,(str)=> str.toUpperCase());
+};

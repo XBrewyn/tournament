@@ -1,11 +1,11 @@
 class Bracket {
-  static nextChallengeId(rounds, [phaseId, nextChallengeId]) {
+  static getNextChallengeId(challenge) {
     let index = -1;
 
-    rounds[phaseId][nextChallengeId].some(({ name }, indx) => {
+    challenge.some(({ name }, playerIndex) => {
       const isNotPlayer = (name === '??');
 
-      index = isNotPlayer ? indx : -1;
+      index = isNotPlayer ? playerIndex : -1;
 
       return isNotPlayer;
     });
@@ -13,23 +13,22 @@ class Bracket {
     return index;
   };
 
-  static createRounds(players) {
-    const data = { name: '??', points: 0 };
-    const sortPlayers = Tool.sortRandom([...players]);
+  static createRounds(players, isRandom = true) {
+    const data = { name: '??', score: 0 };
+    const els = isRandom ? [...players].sortRandom() : [...players];
     const rounds = [];
-    let sizePhase = sortPlayers.length;
+    let roundLen = players.length;
     let index = 0;
 
-    while(((sizePhase % 2) === 0)) {
-      sizePhase = (sizePhase / 2);
+    while(((roundLen % 2) === 0)) {
+      roundLen = (roundLen / 2);
+      rounds.push(
+        Tool.range(roundLen).map(() =>
+          (index === 0)
+            ? els.splice(0, 2)
+            : [{...data }, {...data }]
+      ));
 
-      const phase = Tool.range(sizePhase).map(() =>
-        (index === 0)
-          ? sortPlayers.splice(0, 2)
-          : [{...data }, {...data }]
-      );
-
-      rounds.push(phase);
       index++;
     };
 
