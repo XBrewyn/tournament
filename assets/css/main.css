@@ -1,39 +1,76 @@
+@import './templates.css';
+@import './vars.css';
+
 body {
-  background: hsl(0, 0%, 16%);
+  margin: 0;
+  padding: 0;
+  background: #292929;
 }
 
 .tournament {
-  padding-top: 20px;
-  padding-left: 40px;
+  line-height: 1.15;
+  overflow: scroll;
 }
 
-.tournament__bracket {
+[class*="bracket"] {
+  min-width: 100%;
+}
+
+[class*="winners"] {
+  border-bottom: solid 2px var(--conector-color__gray);
+  padding-bottom: 20px;
+}
+
+[class*="losers"] {
+  margin-top: 20px;
+}
+
+.tournament > div {
   display: flex;
-  width: 200%;
-  margin-top: 20px
+  padding: 30px 0 0 20px;
+}
+
+.tournament__panel {
+  position: absolute;
+  background: #2c2c2c;
+  height: 100vh;
+  right: 0;
+  z-index: 2;
+  padding: 0 !important;
+}
+
+.tournament__icon {
+  width: 20px;
+  float: left;
+  margin-top: -2px;
+}
+
+.tournament__panel-input,
+.tournament__panel-button {
+  display: block;
+  margin-top: 20px;
+}
+
+.tournament__panel-input {
+  height: 158px;
+  resize: none;
+  outline: none;
+}
+
+.tournament__panel-form {
+  padding: 20px;
+}
+.tournament__panel-button {
+  width: 100%;
+  text-align: center;
+  text-transform: uppercase;
+  cursor: pointer;
 }
 
 .tournament__form {
   align-content: center;
   display: flex;
   justify-content: center;
-}
-
-.tournament__textarea {
-  background: transparent;
-  border-radius: 8px;
-  border: solid #3f51b5;
-  color: var(--color__white);
-  font-family: monospace;
-  font-size: 20px;
-  margin-top: 10px;
-  outline: 0;
-  padding: 10px;
-  resize: none;
-}
-
-.tournament__textarea::placeholder {
-  color: var(--color__white);
 }
 
 .tournament__add-players {
@@ -64,7 +101,6 @@ body {
 }
 
 .tournament__player {
-  /* background: #58595e; */
   border-bottom-right-radius: 5px;
   border-top-left-radius: 5px;
   color: var(--color__white);
@@ -78,28 +114,29 @@ body {
 .tournament__increase-score {
   border-top-right-radius: 5px;
   border-bottom-right-radius: 0;
+  border-bottom-left-radius: 0;
 }
 
 .tournament__player:last-child,
 .tournament__player:last-child .tournament__increase-score {
   border-top-right-radius: 0;
   border-bottom-right-radius: 5px;
-}
-
-.tournament__player:last-child {
-  border-top: solid 1px #474747;
   border-top-left-radius: 0;
-  border-bottom-left-radius: 5px;
 }
 
 .tournament__increase-score {
+   align-items: center;
   background: none;
   border: none;
   color: var(--color__white);
   cursor: pointer;
+  display: flex;
   float: right;
+  font-size: 14px;
   height: 30.8px;
+  justify-content: center;
   left: 5px;
+  outline: none;
   position: relative;
   top: -5px;
   width: 32px;
@@ -182,6 +219,7 @@ body {
   left: -25px;
 }
 
-.hide {
-  display: none;
+label {
+  color: white;
+  font-family: arial;
 }

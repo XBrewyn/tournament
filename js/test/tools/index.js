@@ -2,10 +2,7 @@ const test = Tool.test();
 
 test('it should return the correct path for static folders')
   .expected(Tool.path)
-  .equalObject({
-    CSS: './css/',
-    JS: './js/'
-  });
+  .equalObject({ CSS: './css/', JS: './js/' })
 
 test('it should return an array of 0 to 4')
   .expected(Tool.range(5))

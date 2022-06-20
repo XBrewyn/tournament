@@ -2,72 +2,84 @@ class Interface {
   static CLASS_NAME = 'tournament';
   static #roundsLen = 0;
 
-  static InjectInputTemplate() {
+  static injectPanelTemplate () {
     const { CLASS_NAME } = Interface;
+    const options = ['clasic', 'modern'];
+
+    /**
+      <select class="${CLASS_NAME}__panel">
+        ${options.template((option) => `
+          <option value="${option}">${option}</option>
+        `)}
+      </select>
+     */
 
     Tool.createTemplate({
-      target: 'main',
+      target: `.${CLASS_NAME}`,
       template: `
-        <div class="${CLASS_NAME}">
-          <div class="${CLASS_NAME}__inputs">
-            <form class="${CLASS_NAME}__form">
-              <textarea
-                type="text"
-                class="${CLASS_NAME}__textarea"
-                placeholder="Add player"
-              ></textarea>
-              <input type="button" class="${CLASS_NAME}__add-players" value="add" />
-            </form>
-          </div>
-          <div class="${CLASS_NAME}__bracket"></div>
-        </div>
-      `
+        <div class="${CLASS_NAME}__panel">
+          <form class="${CLASS_NAME}__panel-form">
+            <textarea placeholder="players" class="${CLASS_NAME}__panel-input"></textarea>
+            <input type="button" class="${CLASS_NAME}__panel-button" value="add" />
+            <div class="${CLASS_NAME}__panel-random">
+              <label class="${CLASS_NAME}__panel-label">random</label>
+              <input type="checkbox" class="${CLASS_NAME}__panel-checkbox"/>
+            </div>
+       
+          </form>
+        </div>`
     });
-  };
+  }
 
-  static InjectRoundTemplate(rounds) {
+  static injectRoundTemplate({ title, rounds, template }) {
     Interface.#roundsLen = rounds.length;
 
     const { CLASS_NAME } = Interface;
     const getConectorHeight = Interface.#conectorHeight();
-    const getNextChallengeId = Interface.#nextChallengeId();
+    const getNextChallengeId = Interface.#nextChallengeId(title);
     const getChallengeIdTemplate = Interface.#getChallengeIdTemplate();
 
     Tool.createTemplate({
-      target: `.${CLASS_NAME}__bracket`,
+      target: `.${CLASS_NAME}`,
       template: `
-        ${rounds.template((challenges, roundIndex) => {
-          const height = getConectorHeight(roundIndex);
+        <div class="tournament__bracket--${title} tournament__template--${template}">
+          ${rounds.template((challenges, roundIndex) => {
+            const height = getConectorHeight(roundIndex);
 
-          return `
-            <div class="${CLASS_NAME}__round"> 
-              ${challenges.template((players, challengeIndex) => `
-                <div class="${CLASS_NAME}__challenge">
-                  ${Interface.#getTitleTemplate(challengeIndex, roundIndex + 1)}
-                  ${Interface.#getConectorTemplate(roundIndex, challengeIndex, height)}
-                  ${getChallengeIdTemplate()}
+            return `
+              <div class="${CLASS_NAME}__round"> 
+                ${challenges.template((players, challengeIndex) => `
+                  <div class="${CLASS_NAME}__challenge">
+                    ${Interface.#getTitleTemplate(title, challengeIndex, roundIndex + 1)}
+                    ${Interface.#getConectorTemplate(roundIndex, challengeIndex, height)}
+                    ${getChallengeIdTemplate()}
 
-                  ${players.template(({ name, score }, playerIndex) => `
-                    <div class="${CLASS_NAME}__player">
-                      <span
-                        class="${CLASS_NAME}__name"
-                        ${getNextChallengeId((roundIndex + 1), (challengeIndex + 1), playerIndex)}
-                        data-challenge-id="${roundIndex}-${challengeIndex}"
-                      >
-                        ${name}
-                      </span>
-                      <button
-                        class="${CLASS_NAME}__increase-score"
-                        data-button-id="${roundIndex}-${challengeIndex}-${playerIndex}"
-                      >${score}</button>
-                    </div>
-                  `)}
-                </div>
-              `)}
-            </div>
-          `
-        })}
-      `
+                    ${players.template(({ name, score, icon }, playerIndex) => `
+                      <div class="${CLASS_NAME}__player">
+                        <img
+                          class="${CLASS_NAME}__icon"
+                          src="./assets/icons/${icon}HeadSSBU.png"
+                        />
+                        <span
+                          class="${CLASS_NAME}__name"
+                          data-losers-id="${playerIndex}"
+                          ${getNextChallengeId((roundIndex + 1), (challengeIndex + 1), playerIndex)}
+                          data-challenge-id="${roundIndex}-${challengeIndex}"
+                        >
+                          ${name}
+                        </span>
+                        <button
+                          class="${CLASS_NAME}__increase-score"
+                          data-button-id="${roundIndex}-${challengeIndex}-${playerIndex}"
+                          data-title="${title}"
+                        >${score}</button>
+                      </div>
+                    `)}
+                  </div>
+                `)}
+              </div>`
+          })}
+        </div>`
     });
   };
 
@@ -83,19 +95,29 @@ class Interface {
     `);
   };
 
-  static #getTitleTemplate(challengeIndex, roundIndex) {
+  static #getTitleTemplate(title, challengeIndex, roundIndex) {
     const { CLASS_NAME } = Interface;
     const roundsLen = Interface.#roundsLen;
 
     return (challengeIndex === 0) ? `
       <span class="${CLASS_NAME}__title">
         ${
-          (roundIndex === (roundsLen - 1)) && 'semi final' ||
-          (roundIndex === roundsLen) && 'grand final'||
-          `Round ${roundIndex}`
+          (roundIndex === (roundsLen - 1)) && `${title} semi final` ||
+          (roundIndex === roundsLen) && `${title} grand final`||
+          `${title} Round ${roundIndex}`
         }
       </span>  
     ` : '';
+  };
+
+  static resizeBracket() {
+    const els = document.querySelectorAll(`.${Interface.CLASS_NAME}__bracket`);
+    const roundsLen = Interface.#roundsLen;
+    const calcWidth = (roundsLen * 300) + 100;
+
+    if (calcWidth > screen.width) { 
+      els.forEach((el) =>  el.style.width = `${(roundsLen * 300) + 100}px`);
+    };
   };
 
   static #getConectorTemplate(roundIndex, challengeIndex, height) {
@@ -124,7 +146,7 @@ class Interface {
     };
   };
 
-  static #nextChallengeId () {
+  static #nextChallengeId (title) {
     let nextChallegeId = 0;
     const roundsLen = Interface.#roundsLen;
 
@@ -136,7 +158,7 @@ class Interface {
       };
 
       return (roundIndex !== roundsLen)
-        ? `data-next-challenge-id="${roundIndex}-${nextChallegeId}"`
+        ? `data-title="${title}" data-next-challenge-id="${roundIndex}-${nextChallegeId}"`
         : '';
     };
   };

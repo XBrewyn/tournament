@@ -1,0 +1,23 @@
+/* template modern */
+.tournament__template--modern .tournament__player {
+  background: var(--classic-modern__gray);
+}
+
+.tournament__template--modern .tournament__player:last-child {
+  border-top: solid 1px #383838;
+}
+
+/* template clasic */
+.tournament__template--clasic .tournament__player {
+  background: none;
+}
+
+.tournament__template--clasic .tournament__player:last-child {
+  border-top: solid 2px var(--conector-color__gray);
+  border-radius: 0;
+}
+
+/* connector */
+.tournament__connector--square .tournament__player:last-child {
+  border-radius: 30%;
+}

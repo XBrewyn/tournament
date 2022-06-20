@@ -1,10 +1,14 @@
-class Main {
-  state = {
-    finishedRounds: [],
-    rounds: [],
+class Tournament {
+  static #state = {
+    finishedRounds: {
+      winners: [],
+      losers: [],
+    },
+    winners: [],
+    losers: [],
     event: {
-      ADD_PLAYER: 'add-players',
-      INCREASE_SCORE: 'increase-score',
+      ADD_SCORE: 'increase-score',
+      ADD_PLAYER: 'panel-button',
       MOVE_PLAYER: 'name',
     },
     message: {
@@ -15,98 +19,155 @@ class Main {
     },
   };
 
-  constructor() {
-    Interface.InjectInputTemplate();
-    this.handlerOnClick();
+  static addPanel() {
+  }
+
+  static build(settings) {
+    Interface.injectPanelTemplate();
+    Tournament.#state = { ...Tournament.#state, settings };
+    Tournament.#handlerOnClick();
   };
 
-  debugger(buttonType) {
-    const { event: { ADD_PLAYER, INCREASE_SCORE, MOVE_PLAYER }, rounds } = this.state
+  static #notifyState(buttonType) {
+    const { event: { ADD_PLAYER, ADD_SCORE, MOVE_PLAYER }} = Tournament.#state
 
-    if ([ADD_PLAYER, INCREASE_SCORE, MOVE_PLAYER].includes(buttonType)) {
-      console.log(rounds);
+    if ([ADD_PLAYER, ADD_SCORE, MOVE_PLAYER].includes(buttonType)) {
+      console.log(Tournament.#state);
     };
   };
 
-  hideElement(className) {
-    Tool.selector(className).classList.add('hide');
-  };
+  static #handlerOnClick() {
+    window.onclick = ({ target }) => {
+      const { className, innerText: playerName, dataset: { nextChallengeId, challengeId,  losersId, title } } = target;
+      const { message, finishedRounds, event: { MOVE_PLAYER, ADD_SCORE, ADD_PLAYER } } = Tournament.#state;
 
-  handlerOnClick() {
-    window.addEventListener('click', ({ target }) => {
-      const { className, innerText: name, dataset: { nextChallengeId, challengeId } } = target;
-      const { message, finishedRounds, event: { ADD_PLAYER, INCREASE_SCORE, MOVE_PLAYER } } = this.state;
-      const buttonType = className && className.split('__')[1];
-
-      switch(buttonType) {
+      switch(Tournament.#eventType(className)) {
         case ADD_PLAYER:
-          this.addPlayer();
-        break;
+          Tournament.#addPlayer();
+          target.desibled = true;
+          break;
 
-        case INCREASE_SCORE:
-          this.increaseScore(target);
+        case ADD_SCORE:
+          Tournament.#increaseScore({ title, target });
+          Tournament.#notifyState();
         break;
 
         case MOVE_PLAYER:
-          if (name === '??') {
+          if (playerName === '??') {
             alert(message.phaseNotAvailable);
 
-          } else if (finishedRounds.includes(challengeId)) {
+          } else if (finishedRounds[title].includes(challengeId)) {
             alert(message.playerNotAvailable);
 
-          } else if (confirm(message.nextPhase(name))) {
+          } else if (confirm(message.nextPhase(playerName))) {
             // Add a player name to the next challenge.
-            this.updateChallenge({ name, id: nextChallengeId });
-            this.state.finishedRounds.push(challengeId);
+            Tournament.#updateChallenge({
+              icon: target.previousElementSibling.src,
+              playerName,
+              nextChallengeId,
+              challengeId,
+              losersId,
+              title
+            });
+            Tournament.#state.finishedRounds[title].push(challengeId);
+            Tournament.#notifyState();
           };
         break;
       };
+    };
+  };
+
+  static #eventType(className) {
+    return className && className.split('__')[1];
+  };
+
+  static #addPlayer() {
+    const random = Tool.selector('panel-checkbox').checked;
+    const players = Tool.selector('panel-input').value.replace(/\n/g, ' ').split(' ');
+    const winners = players.map((name) => {
+      const splitName = name.split('-');
+      const icon =  name.includes('-') ? splitName[1] : '';
+      const namePlayer = name.includes('-') ? splitName[0] : name;
+ 
+      return { name: namePlayer, score: 0, icon  };
     });
-  };
 
-  addPlayer() {
-    const textarea = Tool.selector('textarea').value;
-    const value = textarea.replace(/(\n|\s\s+)/g, ' ').trim();
-    const names = value.split(' ').map((name) => ({ name, score: 0 }));
+    const losers = Tool.range(Math.floor(winners.length / 2)).map(() => ({ name: '??', score: 0 }));
 
-    if (this.canAddPlayers(names.length)) {
-      this.state.rounds = Bracket.createRounds(names);
-      this.hideElement('inputs');
-      Interface.InjectRoundTemplate(this.state.rounds);
+    if (Tournament.canAddPlayers(winners.length)) {
+      this.#createBrackers({ title: 'winners', data: winners, random });
+      this.#createBrackers({ title: 'losers', data: losers });
     } else {
-      alert(`Debes agregar una cantidad de jugadores que pueda soportar el diagrama.\n\nAquí algunas cantidadas disponible que puedes probar:\n\n 2, 4, 8, 16, 32, 64, 128 ect.`);
-    }
+      alert(`size of players available: 2, 4, 8, 16, 32, 64, 128....`);
+    };
   };
 
-  canAddPlayers(size) {
+  static #createBrackers({ title, data, random = false }) {
+    const state = Tournament.#state;
+
+    state[title] = Bracket.createRounds(data, random);
+    Interface.injectRoundTemplate({
+      title,
+      rounds: state[title],
+      template: 'modern'
+    });
+    Interface.resizeBracket();
+  };
+
+  static canAddPlayers(size) {
     for (let index = 2; index <= size; index *= 2)
       if (size === index) return true;
 
     return false;
   };
 
-  increaseScore(target) {
+  static #increaseScore({ title, target }) {
     const [roundId, challengeId, playerId] = target.dataset.buttonId.split('-');
-    const player = this.state.rounds[roundId][challengeId][playerId];
+    const player = Tournament.#state[title][roundId][challengeId][playerId];
+    const value =  (Number(target.innerText) + 1);
 
-    player.score += 1;
-    target.innerText = player.score;
+    player.score = value;
+    target.innerText =  player.score;
   };
 
-
-  updateChallenge({ id, name }) {
+  static #updateChallenge({ icon, playerName, nextChallengeId, challengeId, losersId, title }) {
     const className = Interface.CLASS_NAME;
-    const [roundId, challengeId] = id.split('-');
-    const challenge = this.state.rounds[roundId][challengeId];
+    const [roundId, nexChallengeId] = nextChallengeId.split('-');
+    const challenge = Tournament.#state[title][roundId][nexChallengeId];
     const playerId = Bracket.getNextChallengeId(challenge);
+    const losers =  [...Tool.selector(`bracket--losers`).querySelectorAll(`.${className}__name`)];
+    const challengeLoserId = challengeId.split('-')[1];
+    const nextChallengeEl = (
+      Tool.selector(`bracket--${title}`)
+        .querySelectorAll('.tournament__round')[roundId]
+        .querySelectorAll(`.${className}__challenge`)[nexChallengeId]
+    );
 
-    challenge[playerId] = { name, score: 0 };
+    // Update score and player name.
+    challenge[playerId] = { name: playerName, score: 0, icon };
 
-    Tool.selectorAll('round')[roundId]
-      .querySelectorAll(`.${className}__challenge`)[challengeId]
-      .querySelectorAll(`.${className}__name`)[playerId]
-      .innerText = name;
+    // Update next challenge.
+    nextChallengeEl.querySelectorAll(`.${className}__name`)[playerId].innerText = playerName;
+    nextChallengeEl.querySelectorAll(`.${className}__icon`)[playerId].src = icon;
+
+    // Move player to losers brackers.
+    if (title === 'winners') {
+      losers.some((loser, index) => {
+        if ((loser.innerText === '??') && (roundId === '1')) {
+          const playerLoser = Tournament.#state.winners[0][challengeLoserId];
+          const id = (losersId === '0') ? 1 : 0;
+
+          loser.innerText = playerLoser[id].name;
+
+          Tool.selector(`bracket--losers`)
+            .querySelectorAll(`.${className}__icon`)[index]
+            .src =`./assets/icons/${playerLoser[id].icon}HeadSSBU.png`;
+
+          return true;
+        };
+
+        return false;
+      });   
+    }
   };
 };
-
-new Main();

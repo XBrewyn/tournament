@@ -38,8 +38,8 @@ class Tool {
       return {
         notify: () => console.table(tests),
         expected: (expect) => {
-          const passed = { Message: message, passed: '✓'};
-          const notPassed = { Message: message, passed: 'x'};
+          const passed = { Message: message, passed: '✅'};
+          const notPassed = { Message: message, passed: '❌'};
 
           return {
             equal(value) {
